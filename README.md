@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon128.png" width="96" height="96" alt="GPT Image 2 Prompt Picker logo" />
+</p>
+
 # GPT Image 2 Prompt Picker
 
 一个 Chrome MV3 扩展，用于在 ChatGPT 网页直接选择、应用和管理 gpt-image-2 提示词。
