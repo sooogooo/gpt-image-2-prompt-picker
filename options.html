@@ -74,8 +74,8 @@
       <section class="prompt-grid" data-role="prompt-list"></section>
     </main>
 
-    <dialog class="editor" data-role="editor">
-      <form method="dialog">
+    <section class="editor" data-role="editor" hidden>
+      <form>
         <header>
           <strong data-role="editor-title">新增 Prompt</strong>
           <button type="button" title="关闭" data-action="close-editor">×</button>
@@ -113,7 +113,7 @@
           <button class="primary" type="submit" data-action="save-editor">保存</button>
         </footer>
       </form>
-    </dialog>
+    </section>
 
     <div class="toast" data-role="toast"></div>
     <script src="options.js"></script>

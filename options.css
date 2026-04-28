@@ -340,15 +340,27 @@ textarea:focus {
 }
 
 .editor {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
   width: min(720px, calc(100vw - 30px));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  height: fit-content;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0;
   box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+  background: #ffffff;
+  overflow: auto;
 }
 
-.editor::backdrop {
-  background: rgba(15, 23, 42, 0.34);
+.editor[hidden] {
+  display: none;
+}
+
+.editor[data-open="true"] {
+  display: block;
 }
 
 .editor form {

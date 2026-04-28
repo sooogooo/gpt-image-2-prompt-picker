@@ -320,11 +320,15 @@ function openEditor(id = null) {
   dialog.querySelector("[data-field='categoryId']").value = item?.categoryId || "";
   dialog.querySelector("[data-field='tags']").value = item?.tags?.join(", ") || "";
   dialog.querySelector("[data-field='text']").value = item?.text || "";
-  dialog.showModal();
+  dialog.hidden = false;
+  dialog.dataset.open = "true";
+  dialog.querySelector("[data-field='title']").focus();
 }
 
 function closeEditor() {
-  document.querySelector("[data-role='editor']").close();
+  const dialog = document.querySelector("[data-role='editor']");
+  dialog.dataset.open = "false";
+  dialog.hidden = true;
   state.editing = null;
 }
 
