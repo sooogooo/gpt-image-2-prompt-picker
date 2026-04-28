@@ -235,11 +235,39 @@
   }
 
   async function chromeGet(key) {
-    return new Promise((resolve) => chrome.storage.local.get(key, resolve));
+    if (!isExtensionContextAlive()) return {};
+    return new Promise((resolve) => {
+      try {
+        chrome.storage.local.get(key, (value) => {
+          if (chrome.runtime.lastError) {
+            console.warn("GPT Image 2 Prompt Picker storage get failed:", chrome.runtime.lastError.message);
+            resolve({});
+            return;
+          }
+          resolve(value || {});
+        });
+      } catch (error) {
+        console.warn("GPT Image 2 Prompt Picker storage get failed:", error);
+        resolve({});
+      }
+    });
   }
 
   async function chromeSet(value) {
-    return new Promise((resolve) => chrome.storage.local.set(value, resolve));
+    if (!isExtensionContextAlive()) return;
+    return new Promise((resolve) => {
+      try {
+        chrome.storage.local.set(value, () => {
+          if (chrome.runtime.lastError) {
+            console.warn("GPT Image 2 Prompt Picker storage set failed:", chrome.runtime.lastError.message);
+          }
+          resolve();
+        });
+      } catch (error) {
+        console.warn("GPT Image 2 Prompt Picker storage set failed:", error);
+        resolve();
+      }
+    });
   }
 
   async function loadPrompts(force = false) {
@@ -572,6 +600,10 @@
   }
 
   function openManager() {
+    if (!isExtensionContextAlive()) {
+      showToast("扩展刚刚被刷新过，请刷新 ChatGPT 页面后再打开管理页");
+      return;
+    }
     chrome.runtime.sendMessage({ type: "gip2-open-manager" }, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
         showToast("管理页打开失败，请从扩展详情页进入「扩展程序选项」");
@@ -702,6 +734,10 @@
     return escapeHtml(value).replaceAll("`", "&#096;");
   }
 
+  function isExtensionContextAlive() {
+    return Boolean(globalThis.chrome?.runtime?.id && chrome.storage?.local);
+  }
+
   function parseTime(value) {
     if (!value) return 0;
     if (typeof value === "number") return value;
@@ -718,5 +754,12 @@
   }
 
   createUi();
-  loadPrompts();
+  loadPrompts().catch((error) => {
+    console.warn("GPT Image 2 Prompt Picker failed to load prompts:", error);
+    remotePrompts = fallbackPrompts
+      .map((item, index) => normalizePrompt({ ...item, source: "remote" }, index))
+      .filter(Boolean);
+    setPrompts("加载失败，使用内置样例");
+    showToast("提示词库加载失败，请刷新 ChatGPT 页面后重试");
+  });
 })();
