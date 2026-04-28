@@ -572,11 +572,11 @@
   }
 
   function openManager() {
-    if (chrome.runtime?.openOptionsPage) {
-      chrome.runtime.openOptionsPage();
-    } else {
-      window.open(chrome.runtime.getURL("options.html"), "_blank", "noopener,noreferrer");
-    }
+    chrome.runtime.sendMessage({ type: "gip2-open-manager" }, (response) => {
+      if (chrome.runtime.lastError || !response?.ok) {
+        showToast("管理页打开失败，请从扩展详情页进入「扩展程序选项」");
+      }
+    });
   }
 
   function applyActivePrompt() {

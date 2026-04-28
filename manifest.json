@@ -3,7 +3,7 @@
   "name": "GPT Image 2 Prompt Picker",
   "description": "在 ChatGPT 网页直接搜索、应用和管理 GPT Image 2 提示词。",
   "version": "0.3.0",
-  "permissions": ["storage", "clipboardWrite", "alarms"],
+  "permissions": ["storage", "clipboardWrite", "alarms", "tabs"],
   "host_permissions": [
     "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/*"
   ],

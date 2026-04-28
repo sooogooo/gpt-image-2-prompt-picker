@@ -19,7 +19,19 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command === "open-prompt-manager") chrome.runtime.openOptionsPage();
+  if (command === "open-prompt-manager") openPromptManager();
+});
+
+chrome.action.onClicked.addListener(() => {
+  openPromptManager();
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "gip2-open-manager") return false;
+  openPromptManager()
+    .then(() => sendResponse({ ok: true }))
+    .catch((error) => sendResponse({ ok: false, error: error.message }));
+  return true;
 });
 
 async function checkRemoteUpdates() {
@@ -70,6 +82,17 @@ function hashString(value) {
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0).toString(16);
+}
+
+async function openPromptManager() {
+  const url = chrome.runtime.getURL("options.html");
+  const tabs = await chrome.tabs.query({ url });
+  if (tabs[0]?.id) {
+    await chrome.tabs.update(tabs[0].id, { active: true });
+    if (tabs[0].windowId) await chrome.windows.update(tabs[0].windowId, { focused: true });
+    return;
+  }
+  await chrome.tabs.create({ url });
 }
 
 function chromeGet(key) {
