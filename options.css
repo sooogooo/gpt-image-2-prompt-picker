@@ -343,16 +343,11 @@ textarea:focus {
   position: fixed;
   inset: 0;
   z-index: 50;
-  width: min(720px, calc(100vw - 30px));
-  max-height: calc(100vh - 32px);
-  margin: auto;
-  height: fit-content;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
-  background: #ffffff;
-  overflow: auto;
+  width: 100vw;
+  height: 100vh;
+  padding: 16px;
+  display: grid;
+  place-items: center;
 }
 
 .editor[hidden] {
@@ -360,10 +355,25 @@ textarea:focus {
 }
 
 .editor[data-open="true"] {
-  display: block;
+  display: grid;
+}
+
+.editor-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.34);
 }
 
 .editor form {
+  position: relative;
+  z-index: 1;
+  width: min(720px, calc(100vw - 30px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
   padding: 16px;
   display: grid;
   gap: 12px;

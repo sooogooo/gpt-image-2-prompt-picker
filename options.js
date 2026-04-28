@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function bindEvents() {
-  document.querySelector("[data-action='new-prompt']").addEventListener("click", () => openEditor());
+  document.querySelector("[data-action='new-prompt']").addEventListener("click", () => safeOpenEditor());
   document.querySelector("[data-action='add-category']").addEventListener("click", addCategory);
   document.querySelector("[data-action='check-remote']").addEventListener("click", checkRemoteUpdates);
   document.querySelector("[data-action='clear-remote']").addEventListener("click", clearRemoteDownloads);
@@ -39,6 +39,16 @@ function bindEvents() {
   document.querySelector("[data-role='search']").addEventListener("input", renderPromptList);
   document.querySelector("[data-role='source']").addEventListener("change", renderPromptList);
   document.querySelector("[data-role='sort']").addEventListener("change", renderPromptList);
+  const promptList = document.querySelector("[data-role='prompt-list']");
+  promptList.addEventListener("click", handlePromptListClick);
+  promptList.addEventListener("dragstart", (event) => {
+    const card = event.target.closest(".prompt-card");
+    if (!card || event.target.closest("button")) {
+      event.preventDefault();
+      return;
+    }
+    event.dataTransfer.setData("text/plain", card.dataset.id);
+  });
 }
 
 async function loadState() {
@@ -265,25 +275,27 @@ function renderPromptList() {
   state.filtered = prompts;
   const list = document.querySelector("[data-role='prompt-list']");
   list.innerHTML = prompts.length ? prompts.map(renderPromptCard).join("") : `<div class="stat">没有匹配的 prompt。</div>`;
+}
 
-  list.querySelectorAll(".prompt-card").forEach((card) => {
-    card.addEventListener("dragstart", (event) => {
-      event.dataTransfer.setData("text/plain", card.dataset.id);
-    });
-  });
+function handlePromptListClick(event) {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+  const card = button.closest(".prompt-card");
+  if (!card) return;
+  event.preventDefault();
+  event.stopPropagation();
 
-  list.querySelectorAll("[data-action='edit']").forEach((button) => {
-    button.addEventListener("click", () => openEditor(button.closest(".prompt-card").dataset.id));
-  });
-  list.querySelectorAll("[data-action='duplicate']").forEach((button) => {
-    button.addEventListener("click", () => duplicatePrompt(button.closest(".prompt-card").dataset.id));
-  });
-  list.querySelectorAll("[data-action='auto']").forEach((button) => {
-    button.addEventListener("click", () => autoClassifyPrompt(button.closest(".prompt-card").dataset.id));
-  });
-  list.querySelectorAll("[data-action='delete']").forEach((button) => {
-    button.addEventListener("click", () => deletePrompt(button.closest(".prompt-card").dataset.id));
-  });
+  const id = card.dataset.id;
+  const action = button.dataset.action;
+  if (action === "edit") {
+    safeOpenEditor(id);
+  } else if (action === "duplicate") {
+    duplicatePrompt(id);
+  } else if (action === "auto") {
+    autoClassifyPrompt(id);
+  } else if (action === "delete") {
+    deletePrompt(id);
+  }
 }
 
 function renderPromptCard(item) {
@@ -301,17 +313,30 @@ function renderPromptCard(item) {
     <div class="prompt-text">${escapeHtml(item.text)}</div>
     ${tags}
     <div class="card-actions">
-      <button type="button" data-action="edit">编辑</button>
-      <button type="button" data-action="duplicate">复制为我的</button>
-      <button type="button" data-action="auto">自动分类</button>
-      <button type="button" data-action="delete">删除</button>
+      <button type="button" draggable="false" data-action="edit">编辑</button>
+      <button type="button" draggable="false" data-action="duplicate">复制为我的</button>
+      <button type="button" draggable="false" data-action="auto">自动分类</button>
+      <button type="button" draggable="false" data-action="delete">删除</button>
     </div>
   </article>`;
+}
+
+function safeOpenEditor(id = null) {
+  try {
+    openEditor(id);
+  } catch (error) {
+    console.error(error);
+    showToast(`编辑器打开失败：${error.message}`);
+  }
 }
 
 function openEditor(id = null) {
   const dialog = document.querySelector("[data-role='editor']");
   const item = id ? getManagedPrompts().find((prompt) => prompt.id === id) : null;
+  if (id && !item) {
+    showToast("没有找到这条 prompt，请刷新管理页");
+    return;
+  }
   state.editing = item ? { id: item.id, source: item.source } : null;
   dialog.querySelector("[data-role='editor-title']").textContent = item ? "编辑 Prompt" : "新增 Prompt";
   dialog.querySelector("[data-field='title']").value = item?.title || "";
