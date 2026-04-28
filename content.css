@@ -1,0 +1,523 @@
+.gip2-launcher,
+.gip2-composer-btn,
+.gip2-panel,
+.gip2-toast {
+  color-scheme: light;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  letter-spacing: 0;
+}
+
+.gip2-launcher {
+  position: fixed;
+  right: 18px;
+  bottom: 94px;
+  z-index: 2147483646;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(19, 31, 36, 0.14);
+  border-radius: 8px;
+  background: #102a43;
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(16, 42, 67, 0.22);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.gip2-launcher:hover {
+  transform: translateY(-1px);
+  background: #173b5f;
+  box-shadow: 0 16px 36px rgba(16, 42, 67, 0.28);
+}
+
+.gip2-launcher svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gip2-composer-btn {
+  position: fixed;
+  z-index: 2147483645;
+  height: 32px;
+  min-width: 76px;
+  border: 1px solid rgba(20, 32, 38, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #173b5f;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gip2-composer-btn[data-visible="true"] {
+  display: inline-flex;
+}
+
+.gip2-composer-btn:hover {
+  background: #eef5f9;
+  border-color: rgba(47, 128, 237, 0.36);
+}
+
+.gip2-composer-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.gip2-panel {
+  position: fixed;
+  right: 18px;
+  bottom: 148px;
+  z-index: 2147483646;
+  width: min(440px, calc(100vw - 28px));
+  height: min(680px, calc(100vh - 184px));
+  min-height: 420px;
+  background: #fbfcfd;
+  border: 1px solid rgba(20, 32, 38, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 24px 72px rgba(15, 23, 42, 0.24);
+  overflow: hidden;
+  display: none;
+  grid-template-rows: auto auto 1fr auto;
+}
+
+.gip2-panel[data-open="true"] {
+  display: grid;
+}
+
+.gip2-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(20, 32, 38, 0.08);
+  background: #ffffff;
+}
+
+.gip2-title {
+  min-width: 0;
+}
+
+.gip2-title strong {
+  display: block;
+  color: #102a43;
+  font-size: 14px;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.gip2-title span {
+  display: block;
+  margin-top: 3px;
+  color: #5a6872;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gip2-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(20, 32, 38, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #23343d;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.gip2-icon-btn:hover {
+  background: #eef5f9;
+}
+
+.gip2-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.gip2-controls {
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  background: #f4f7f9;
+  border-bottom: 1px solid rgba(20, 32, 38, 0.08);
+}
+
+.gip2-search {
+  width: 100%;
+  height: 38px;
+  border: 1px solid rgba(20, 32, 38, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17262d;
+  font-size: 13px;
+  padding: 0 11px;
+  outline: none;
+}
+
+.gip2-search:focus {
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.14);
+}
+
+.gip2-row {
+  display: flex;
+  gap: 8px;
+}
+
+.gip2-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.gip2-tab {
+  height: 30px;
+  border: 1px solid rgba(20, 32, 38, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #40515a;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.gip2-tab[data-active="true"] {
+  background: #173b5f;
+  border-color: #173b5f;
+  color: #ffffff;
+}
+
+.gip2-select {
+  min-width: 0;
+  flex: 1;
+  height: 34px;
+  border: 1px solid rgba(20, 32, 38, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17262d;
+  font-size: 12px;
+  padding: 0 9px;
+}
+
+.gip2-input,
+.gip2-textarea {
+  width: 100%;
+  border: 1px solid rgba(20, 32, 38, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17262d;
+  font-size: 13px;
+  outline: none;
+}
+
+.gip2-input {
+  height: 34px;
+  padding: 0 10px;
+}
+
+.gip2-textarea {
+  min-height: 112px;
+  resize: vertical;
+  padding: 9px 10px;
+  line-height: 1.45;
+}
+
+.gip2-input:focus,
+.gip2-textarea:focus {
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.14);
+}
+
+.gip2-form {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(20, 32, 38, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.gip2-form[hidden] {
+  display: none;
+}
+
+.gip2-form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gip2-list {
+  overflow: auto;
+  padding: 10px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.gip2-card {
+  border: 1px solid rgba(20, 32, 38, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+}
+
+.gip2-card:hover,
+.gip2-card[data-active="true"] {
+  border-color: rgba(47, 128, 237, 0.42);
+  box-shadow: 0 8px 18px rgba(16, 42, 67, 0.08);
+}
+
+.gip2-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #63717b;
+  font-size: 11px;
+  min-width: 0;
+}
+
+.gip2-source {
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #f3efe7;
+  color: #6b4b16;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.gip2-source[data-source="custom"] {
+  background: #eaf7f2;
+  color: #147d64;
+}
+
+.gip2-card-actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.gip2-mini-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(20, 32, 38, 0.12);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #40515a;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.gip2-mini-btn:hover {
+  background: #eef5f9;
+}
+
+.gip2-mini-btn.gip2-danger:hover {
+  background: #fff0f0;
+  border-color: rgba(196, 45, 45, 0.28);
+  color: #b3261e;
+}
+
+.gip2-mini-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.gip2-pill {
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #eef5f9;
+  color: #23445b;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.gip2-author {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gip2-card-text {
+  color: #17262d;
+  font-size: 13px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+.gip2-card-title {
+  color: #102a43;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 760;
+}
+
+.gip2-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.gip2-tags span {
+  max-width: 100%;
+  min-height: 20px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f5f7f8;
+  color: #52616a;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.gip2-card-media {
+  display: flex;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.gip2-card-media img {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #edf1f4;
+}
+
+.gip2-empty {
+  color: #63717b;
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.gip2-footer {
+  background: #ffffff;
+  border-top: 1px solid rgba(20, 32, 38, 0.08);
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.gip2-preview {
+  max-height: 112px;
+  overflow: auto;
+  color: #17262d;
+  background: #f5f7f8;
+  border: 1px solid rgba(20, 32, 38, 0.08);
+  border-radius: 8px;
+  padding: 9px;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.gip2-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+}
+
+.gip2-btn {
+  height: 36px;
+  border: 1px solid rgba(20, 32, 38, 0.13);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17262d;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.gip2-btn:hover {
+  background: #eef5f9;
+}
+
+.gip2-btn-primary {
+  background: #147d64;
+  border-color: #147d64;
+  color: #ffffff;
+}
+
+.gip2-btn-primary:hover {
+  background: #0f6b55;
+}
+
+.gip2-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.gip2-toast {
+  position: fixed;
+  right: 18px;
+  bottom: 28px;
+  z-index: 2147483647;
+  max-width: min(420px, calc(100vw - 28px));
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #17262d;
+  color: #ffffff;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.24);
+  font-size: 13px;
+  display: none;
+}
+
+.gip2-toast[data-open="true"] {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .gip2-launcher {
+    right: 12px;
+    bottom: 82px;
+  }
+
+  .gip2-panel {
+    right: 8px;
+    bottom: 132px;
+    width: calc(100vw - 16px);
+    height: min(640px, calc(100vh - 150px));
+  }
+
+  .gip2-composer-btn {
+    min-width: 40px;
+    width: 40px;
+  }
+
+  .gip2-composer-btn span {
+    display: none;
+  }
+}
