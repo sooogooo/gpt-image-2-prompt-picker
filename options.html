@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GPT Image 2 Prompt 管理</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>Prompt 管理</strong>
+        <span>GPT Image 2 Prompt Picker</span>
+      </div>
+
+      <button class="primary" type="button" data-action="new-prompt">新增 Prompt</button>
+
+      <section class="panel">
+        <div class="panel-title">
+          <span>分类</span>
+          <button type="button" title="新增分类" data-action="add-category">+</button>
+        </div>
+        <div class="category-list" data-role="categories"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <span>远程库</span>
+        </div>
+        <button class="ghost" type="button" data-action="check-remote">检查更新</button>
+        <button class="ghost danger" type="button" data-action="clear-remote">清空远程下载</button>
+        <p class="hint" data-role="remote-status">尚未检查。</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <span>导出</span>
+        </div>
+        <select data-role="export-format">
+          <option value="json">JSON</option>
+          <option value="csv">CSV</option>
+          <option value="markdown">Markdown</option>
+          <option value="txt">TXT</option>
+        </select>
+        <button class="ghost" type="button" data-action="export">导出当前列表</button>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="toolbar">
+        <div>
+          <h1>Prompt 页面</h1>
+          <p>拖拽 prompt 到左侧分类即可归类。远程 prompt 被修改后会保留本地版本。</p>
+        </div>
+        <div class="toolbar-actions">
+          <input data-role="search" placeholder="搜索标题、正文、标签、作者" />
+          <select data-role="source">
+            <option value="all">全部来源</option>
+            <option value="custom">我的</option>
+            <option value="remote">远程库</option>
+            <option value="editedRemote">已修改远程</option>
+          </select>
+          <select data-role="sort">
+            <option value="updated">最近更新</option>
+            <option value="category">按分类</option>
+            <option value="source">按来源</option>
+            <option value="length">按长度</option>
+          </select>
+        </div>
+      </header>
+
+      <section class="summary" data-role="summary"></section>
+
+      <section class="prompt-grid" data-role="prompt-list"></section>
+    </main>
+
+    <dialog class="editor" data-role="editor">
+      <form method="dialog">
+        <header>
+          <strong data-role="editor-title">新增 Prompt</strong>
+          <button type="button" title="关闭" data-action="close-editor">×</button>
+        </header>
+        <label>
+          名称
+          <input data-field="title" maxlength="100" />
+        </label>
+        <div class="two">
+          <label>
+            来源
+            <input data-field="sourceLabel" disabled />
+          </label>
+          <label>
+            语言
+            <input data-field="lang" maxlength="16" />
+          </label>
+        </div>
+        <div class="two">
+          <label>
+            分类
+            <select data-field="categoryId"></select>
+          </label>
+          <label>
+            标签
+            <input data-field="tags" placeholder="用逗号分隔" />
+          </label>
+        </div>
+        <label>
+          Prompt
+          <textarea data-field="text" rows="12"></textarea>
+        </label>
+        <footer>
+          <button class="ghost" type="button" data-action="auto-classify">自动分类</button>
+          <button class="primary" type="submit" data-action="save-editor">保存</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <div class="toast" data-role="toast"></div>
+    <script src="options.js"></script>
+  </body>
+</html>

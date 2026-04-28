@@ -3,6 +3,10 @@
     "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json";
   const CACHE_KEY = "gip2PromptCache";
   const CUSTOM_KEY = "gip2CustomPrompts";
+  const CATEGORIES_KEY = "gip2Categories";
+  const REMOTE_OVERRIDES_KEY = "gip2RemoteOverrides";
+  const HIDDEN_REMOTE_IDS_KEY = "gip2HiddenRemoteIds";
+  const UPDATE_KEY = "gip2RemoteUpdate";
   const CACHE_TTL = 1000 * 60 * 60 * 6;
   const MAX_ITEMS = 500;
 
@@ -42,6 +46,9 @@
   let prompts = [];
   let remotePrompts = [];
   let customPrompts = [];
+  let categories = [];
+  let remoteOverrides = [];
+  let hiddenRemoteIds = [];
   let filtered = [];
   let activeId = null;
   let editingCustomId = null;
@@ -99,6 +106,7 @@
             <option value="length">按长度</option>
           </select>
           <button class="gip2-icon-btn" type="button" title="新增 prompt" data-action="new">${iconPlus}</button>
+          <button class="gip2-icon-btn" type="button" title="打开管理页" data-action="manage">${iconEdit}</button>
           <button class="gip2-icon-btn" type="button" title="刷新" data-action="refresh">${iconRefresh}</button>
         </div>
         <form class="gip2-form" data-role="form" hidden>
@@ -137,6 +145,7 @@
     });
     panel.querySelector('[data-action="refresh"]').addEventListener("click", () => loadPrompts(true));
     panel.querySelector('[data-action="new"]').addEventListener("click", () => openPromptForm());
+    panel.querySelector('[data-action="manage"]').addEventListener("click", openManager);
     panel.querySelector('[data-action="cancel-edit"]').addEventListener("click", closePromptForm);
     panel.querySelector('[data-role="form"]').addEventListener("submit", savePromptFromForm);
     panel.querySelector('[data-action="apply"]').addEventListener("click", applyActivePrompt);
@@ -218,6 +227,9 @@
       updatedAt: parseTime(item.updatedAt),
       source: item.source === "custom" ? "custom" : "remote",
       tags: Array.isArray(item.tags) ? item.tags.map(String).filter(Boolean) : [],
+      categoryId: String(item.categoryId || ""),
+      remoteId: String(item.remoteId || ""),
+      remoteEdited: Boolean(item.remoteEdited),
       media: Array.isArray(item.media) ? item.media.filter((media) => media && media.url).slice(0, 4) : [],
     };
   }
@@ -232,13 +244,15 @@
 
   async function loadPrompts(force = false) {
     setStatus("正在加载提示词库...");
-    customPrompts = await loadCustomPrompts();
+    await loadLocalManagementState();
     try {
       if (!force) {
         const cached = await chromeGet(CACHE_KEY);
         const payload = cached[CACHE_KEY];
         if (payload && Date.now() - payload.savedAt < CACHE_TTL && Array.isArray(payload.items)) {
-          remotePrompts = payload.items.map((item, index) => normalizePrompt({ ...item, source: "remote" }, index)).filter(Boolean);
+          remotePrompts = applyManagedRemoteState(
+            payload.items.map((item, index) => normalizePrompt({ ...item, source: "remote" }, index)).filter(Boolean),
+          );
           setPrompts("已从缓存加载");
           return;
         }
@@ -252,12 +266,12 @@
         .filter(Boolean)
         .slice(0, MAX_ITEMS);
       await chromeSet({ [CACHE_KEY]: { savedAt: Date.now(), items } });
-      remotePrompts = items;
+      remotePrompts = applyManagedRemoteState(items);
       setPrompts("已加载 GitHub 最新数据");
     } catch (error) {
-      remotePrompts = fallbackPrompts
+      remotePrompts = applyManagedRemoteState(fallbackPrompts
         .map((item, index) => normalizePrompt({ ...item, source: "remote" }, index))
-        .filter(Boolean);
+        .filter(Boolean));
       setPrompts("加载远程数据失败，使用内置样例");
       showToast(`远程提示词库加载失败：${error.message}`);
     }
@@ -272,16 +286,71 @@
       .sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
   }
 
+  async function loadLocalManagementState() {
+    const stored = await chromeGet([CUSTOM_KEY, CATEGORIES_KEY, REMOTE_OVERRIDES_KEY, HIDDEN_REMOTE_IDS_KEY, UPDATE_KEY]);
+    categories = Array.isArray(stored[CATEGORIES_KEY]) ? stored[CATEGORIES_KEY] : [];
+    remoteOverrides = Array.isArray(stored[REMOTE_OVERRIDES_KEY]) ? stored[REMOTE_OVERRIDES_KEY] : [];
+    hiddenRemoteIds = Array.isArray(stored[HIDDEN_REMOTE_IDS_KEY]) ? stored[HIDDEN_REMOTE_IDS_KEY] : [];
+    customPrompts = await loadCustomPrompts();
+    if (stored[UPDATE_KEY]?.hasUpdate) {
+      showToast("远程提示词库有更新，可在管理页查看");
+    }
+  }
+
+  function applyManagedRemoteState(items) {
+    const hidden = new Set(hiddenRemoteIds);
+    const overrides = new Map(remoteOverrides.map((item) => [item.remoteId || item.id, item]));
+    return items
+      .filter((item) => !hidden.has(item.id))
+      .map((item) => {
+        const override = overrides.get(item.id);
+        if (!override) return item;
+        return normalizePrompt(
+          {
+            ...item,
+            ...override,
+            id: item.id,
+            source: "remote",
+            title: override.title || item.title,
+            text: override.text || item.text,
+            lang: override.lang || item.lang,
+            tags: override.tags || item.tags,
+            categoryId: override.categoryId || item.categoryId,
+            remoteEdited: true,
+          },
+          0,
+        );
+      });
+  }
+
   async function persistCustomPrompts() {
     await chromeSet({ [CUSTOM_KEY]: customPrompts });
   }
 
   function setPrompts(status) {
-    prompts = [...customPrompts, ...remotePrompts];
+    prompts = [...customPrompts, ...getOrphanRemoteOverrides(), ...remotePrompts];
     activeId = prompts[0]?.id || null;
     hydrateLangFilter();
     renderList();
     setStatus(`${status}，共 ${prompts.length} 条，我的 ${customPrompts.length} 条`);
+  }
+
+  function getOrphanRemoteOverrides() {
+    const remoteIds = new Set(remotePrompts.map((item) => item.id));
+    return remoteOverrides
+      .filter((item) => !remoteIds.has(item.remoteId || item.id))
+      .map((item, index) =>
+        normalizePrompt(
+          {
+            ...item,
+            id: item.remoteId || item.id || `override-${index}`,
+            source: "remote",
+            remoteEdited: true,
+          },
+          index,
+        ),
+      )
+      .filter(Boolean);
   }
 
   function hydrateLangFilter() {
@@ -356,6 +425,8 @@
           .join("")}</div>`
       : "";
     const title = item.title ? `<strong class="gip2-card-title">${escapeHtml(item.title)}</strong>` : "";
+    const category = categories.find((entry) => entry.id === item.categoryId);
+    const categoryBadge = category ? `<span class="gip2-source">${escapeHtml(category.name)}</span>` : "";
     const tags = item.tags.length
       ? `<div class="gip2-tags">${item.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>`
       : "";
@@ -371,6 +442,7 @@
         <div class="gip2-meta">
           <span class="gip2-pill">${escapeHtml(item.lang)}</span>
           <span class="gip2-source" data-source="${escapeAttr(item.source)}">${item.source === "custom" ? "我的" : "远程"}</span>
+          ${categoryBadge}
           <span class="gip2-author">@${escapeHtml(item.author)}</span>
           <span>${formatNumber(item.likeCount)} likes</span>
           ${manageActions}
@@ -497,6 +569,14 @@
     panel.querySelectorAll(".gip2-tab").forEach((tab) => {
       tab.dataset.active = String(tab.dataset.source === source);
     });
+  }
+
+  function openManager() {
+    if (chrome.runtime?.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      window.open(chrome.runtime.getURL("options.html"), "_blank", "noopener,noreferrer");
+    }
   }
 
   function applyActivePrompt() {

@@ -2,11 +2,26 @@
   "manifest_version": 3,
   "name": "GPT Image 2 Prompt Picker",
   "description": "在 ChatGPT 网页直接搜索、应用和管理 GPT Image 2 提示词。",
-  "version": "0.2.0",
-  "permissions": ["storage", "clipboardWrite"],
+  "version": "0.3.0",
+  "permissions": ["storage", "clipboardWrite", "alarms"],
   "host_permissions": [
     "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/*"
   ],
+  "action": {
+    "default_title": "GPT Image 2 Prompt Picker"
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "open-prompt-manager": {
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
+      "description": "打开 Prompt 管理页"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],

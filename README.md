@@ -8,35 +8,46 @@
 ## 功能
 
 - 在 ChatGPT 输入框附近显示 `Prompt` 按钮。
-- 从 GitHub Raw 拉取 `gpt_image2_prompts.json`，并缓存 6 小时。
-- 支持搜索、语言筛选、来源筛选、热度/时间/长度排序。
-- 支持直接应用到 ChatGPT 输入框、复制、打开来源。
-- 支持新增、编辑、删除本地自定义 prompt。
-- 自定义 prompt 保存在 Chrome 本地存储里，不会上传。
-- 远程数据加载失败时会显示内置兜底样例。
+- 在 ChatGPT 面板内快速搜索、筛选、应用和复制 prompt。
+- 提供独立 Prompt 管理页，支持新增、编辑、删除、复制为我的 prompt。
+- 支持分类管理、拖拽归类、自动分类。
+- 支持修改远程下载的 prompt，并保留本地覆盖版本，不被远程更新覆盖。
+- 支持隐藏或清空远程下载的 prompt，已修改远程 prompt 会作为本地保护版本保留。
+- 后台静默检查远程库更新，有更新时在面板和管理页提示。
+- 支持导出当前列表为 JSON、CSV、Markdown、TXT。
 
 ## 安装
 
 1. 打开 Chrome 的 `chrome://extensions/`。
 2. 开启右上角「开发者模式」。
 3. 点击「加载已解压的扩展程序」。
-4. 选择本目录：`E:\codex\image-2`。
+4. 选择本目录。
 5. 打开或刷新 ChatGPT 页面。
-6. 点击输入框附近的 `Prompt` 按钮。
 
-## 使用
+## 使用入口
 
-- `全部`：显示远程库和本地自定义 prompt。
-- `我的`：只显示本地自定义 prompt。
-- `远程库`：只显示 GitHub 提示词库。
-- `+`：新增自定义 prompt。
-- 卡片上的编辑按钮：修改本地 prompt。
-- 卡片上的删除按钮：删除本地 prompt。
-- 单击卡片：选择 prompt 并预览全文。
-- 双击卡片：直接应用到 ChatGPT 输入框。
-- `应用`：把当前选择的 prompt 填入 ChatGPT 输入框。
-- `复制`：复制当前选择的 prompt。
-- `刷新`：强制重新从 GitHub 拉取远程库。
+- ChatGPT 输入框附近的 `Prompt` 按钮：快速选择和应用 prompt。
+- ChatGPT 面板顶部的管理按钮：打开完整 Prompt 管理页。
+- Chrome 扩展详情页的「扩展程序选项」：打开完整 Prompt 管理页。
+- 快捷键：`Alt+Shift+P` 打开 Prompt 管理页。
+
+## Prompt 管理
+
+- 左侧分类区可新增、重命名、删除分类。
+- 将 prompt 卡片拖拽到左侧分类上即可归类。
+- `自动分类` 会根据分类关键词和 prompt 内容匹配分类。
+- 编辑远程 prompt 时，不会直接改远程数据，而是保存本地覆盖版本。
+- 删除远程 prompt 时，会在本地隐藏该条远程数据。
+- `清空远程下载` 会清除远程缓存并隐藏当前远程 prompt，已编辑的远程 prompt 会保留本地版本。
+
+## 导出
+
+管理页支持导出当前筛选结果：
+
+- JSON
+- CSV
+- Markdown
+- TXT
 
 ## 数据说明
 
@@ -46,8 +57,12 @@
 https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json
 ```
 
-本地自定义 prompt 使用 `chrome.storage.local` 保存，键名为：
+本地数据使用 `chrome.storage.local` 保存，主要键名：
 
 ```text
 gip2CustomPrompts
+gip2Categories
+gip2RemoteOverrides
+gip2HiddenRemoteIds
+gip2RemoteUpdate
 ```
