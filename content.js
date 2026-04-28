@@ -313,7 +313,7 @@
   }
 
   async function fetchRemotePrompts() {
-    const batches = await Promise.all(
+    const results = await Promise.allSettled(
       REMOTE_SOURCES.map(async (source) => {
         const response = await fetch(`${source.url}?t=${Date.now()}`, { cache: "no-store" });
         if (!response.ok) throw new Error(`${source.name} HTTP ${response.status}`);
@@ -321,7 +321,21 @@
         return parseRemotePayload(payload, source);
       }),
     );
-    return batches.flat().slice(0, MAX_ITEMS);
+    const failures = results.filter((result) => result.status === "rejected");
+    failures.forEach((result) => {
+      console.warn("GPT Image 2 Prompt Picker remote source failed:", result.reason);
+    });
+    const items = results
+      .filter((result) => result.status === "fulfilled")
+      .flatMap((result) => result.value)
+      .slice(0, MAX_ITEMS);
+    if (!items.length) {
+      throw new Error(failures.map((result) => result.reason?.message || String(result.reason)).join("; "));
+    }
+    if (failures.length) {
+      showToast(`部分远程源加载失败，已加载 ${items.length} 条`);
+    }
+    return items;
   }
 
   function parseRemotePayload(payload, source) {

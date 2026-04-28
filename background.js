@@ -75,7 +75,7 @@ async function checkRemoteUpdates() {
 }
 
 async function fetchRemotePrompts() {
-  const batches = await Promise.all(
+  const results = await Promise.allSettled(
     REMOTE_SOURCES.map(async (source) => {
       const response = await fetch(`${source.url}?t=${Date.now()}`, { cache: "no-store" });
       if (!response.ok) throw new Error(`${source.name} HTTP ${response.status}`);
@@ -83,7 +83,18 @@ async function fetchRemotePrompts() {
       return parseRemotePayload(payload, source);
     }),
   );
-  return batches.flat();
+  const items = results
+    .filter((result) => result.status === "fulfilled")
+    .flatMap((result) => result.value);
+  if (!items.length) {
+    throw new Error(
+      results
+        .filter((result) => result.status === "rejected")
+        .map((result) => result.reason?.message || String(result.reason))
+        .join("; "),
+    );
+  }
+  return items;
 }
 
 function parseRemotePayload(payload, source) {
