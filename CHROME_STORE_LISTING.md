@@ -16,7 +16,7 @@ GPT Image 2 Prompt Picker 是一个面向 ChatGPT 网页的提示词管理扩展
 
 - 在 ChatGPT 输入框附近显示 Prompt 按钮。
 - 搜索、筛选并一键应用 GPT Image 2 提示词。
-- 从公开 GitHub 提示词库加载远程 prompt。
+- 从多个公开 GitHub 提示词库加载远程 prompt。
 - 新增、编辑、删除自己的本地 prompt。
 - 支持分类管理、拖拽归类和自动分类。
 - 支持修改远程 prompt，并保留本地覆盖版本。
@@ -60,7 +60,9 @@ Chinese (Simplified)
 
 `https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/*`
 
-用于读取公开的 GPT Image 2 提示词 JSON 数据。
+`https://raw.githubusercontent.com/xiaobin1976/GPT_image/*`
+
+用于读取公开的 GPT Image 2 提示词 JSON 和 catalog 数据。
 
 ## Data usage
 

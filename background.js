@@ -1,5 +1,17 @@
-const RAW_URL =
-  "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json";
+const REMOTE_SOURCES = [
+  {
+    id: "evolink",
+    name: "EvoLinkAI",
+    url: "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json",
+    homepage: "https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts",
+  },
+  {
+    id: "xiaobin",
+    name: "GPT Image Wiki",
+    url: "https://raw.githubusercontent.com/xiaobin1976/GPT_image/main/site/library/catalog.json",
+    homepage: "https://github.com/xiaobin1976/GPT_image",
+  },
+];
 const CACHE_KEY = "gip2PromptCache";
 const UPDATE_KEY = "gip2RemoteUpdate";
 const HASH_KEY = "gip2RemoteSignature";
@@ -36,9 +48,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 async function checkRemoteUpdates() {
   try {
-    const response = await fetch(`${RAW_URL}?t=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const items = await response.json();
+    const items = await fetchRemotePrompts();
     const signature = makeSignature(items);
     const stored = await chromeGet([HASH_KEY, UPDATE_KEY, CACHE_KEY]);
     const previous = stored[HASH_KEY];
@@ -62,6 +72,64 @@ async function checkRemoteUpdates() {
       },
     });
   }
+}
+
+async function fetchRemotePrompts() {
+  const batches = await Promise.all(
+    REMOTE_SOURCES.map(async (source) => {
+      const response = await fetch(`${source.url}?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`${source.name} HTTP ${response.status}`);
+      const payload = await response.json();
+      return parseRemotePayload(payload, source);
+    }),
+  );
+  return batches.flat();
+}
+
+function parseRemotePayload(payload, source) {
+  if (Array.isArray(payload)) {
+    return payload.map((item, index) => ({ ...item, id: `${source.id}-${item.id || index}`, sourceName: source.name }));
+  }
+
+  const cases = Array.isArray(payload?.cases)
+    ? payload.cases.map((item, index) => ({
+        id: `${source.id}-case-${item.id || index}`,
+        title: item.title,
+        author: item.source || source.name,
+        lang: /[a-zA-Z]{20,}/.test(item.prompt || "") ? "mixed" : "zh",
+        text: item.prompt,
+        url: item.sourcePath ? `${source.homepage}/blob/main/${item.sourcePath.split("#")[0]}` : source.homepage,
+        likeCount: 0,
+        createdAt: payload.generatedAt,
+        sourceName: source.name,
+        categoryId: item.categoryId || "",
+        tags: [item.volume, item.categoryId].filter(Boolean),
+        media: item.image
+          ? [{ url: `https://raw.githubusercontent.com/xiaobin1976/GPT_image/main/site/library/images/${item.image}` }]
+          : [],
+      }))
+    : [];
+
+  const templates = Array.isArray(payload?.templates)
+    ? payload.templates
+        .map((item, index) => ({
+          id: `${source.id}-template-${item.id || index}`,
+          title: item.title || item.name,
+          author: source.name,
+          lang: "zh",
+          text: item.prompt || item.template || item.markdown || item.content || item.rawMarkdown,
+          url: source.homepage,
+          likeCount: 0,
+          createdAt: payload.generatedAt,
+          sourceName: `${source.name} Template`,
+          categoryId: item.categoryId || "",
+          tags: ["template", item.categoryId].filter(Boolean),
+          media: [],
+        }))
+        .filter((item) => item.text)
+    : [];
+
+  return [...cases, ...templates].filter((item) => item.text);
 }
 
 function makeSignature(items) {

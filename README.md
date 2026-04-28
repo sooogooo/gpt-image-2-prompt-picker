@@ -7,12 +7,15 @@
 一个 Chrome MV3 扩展，用于在 ChatGPT 网页直接选择、应用和管理 gpt-image-2 提示词。
 
 默认远程提示词来自：
-[`EvoLinkAI/awesome-gpt-image-2-prompts`](https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts)
+
+- [`EvoLinkAI/awesome-gpt-image-2-prompts`](https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts)
+- [`xiaobin1976/GPT_image`](https://github.com/xiaobin1976/GPT_image)
 
 ## 功能
 
 - 在 ChatGPT 输入框附近显示 `Prompt` 按钮。
 - 在 ChatGPT 面板内快速搜索、筛选、应用和复制 prompt。
+- 支持多个远程提示词源，目前包含 EvoLinkAI 和 GPT Image Wiki。
 - 提供独立 Prompt 管理页，支持新增、编辑、删除、复制为我的 prompt。
 - 支持分类管理、拖拽归类、自动分类。
 - 支持修改远程下载的 prompt，并保留本地覆盖版本，不被远程更新覆盖。
@@ -59,6 +62,7 @@
 
 ```text
 https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json
+https://raw.githubusercontent.com/xiaobin1976/GPT_image/main/site/library/catalog.json
 ```
 
 本地数据使用 `chrome.storage.local` 保存，主要键名：

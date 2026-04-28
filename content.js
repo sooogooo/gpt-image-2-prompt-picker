@@ -1,6 +1,18 @@
 (() => {
-  const RAW_URL =
-    "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json";
+  const REMOTE_SOURCES = [
+    {
+      id: "evolink",
+      name: "EvoLinkAI",
+      url: "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json",
+      homepage: "https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts",
+    },
+    {
+      id: "xiaobin",
+      name: "GPT Image Wiki",
+      url: "https://raw.githubusercontent.com/xiaobin1976/GPT_image/main/site/library/catalog.json",
+      homepage: "https://github.com/xiaobin1976/GPT_image",
+    },
+  ];
   const CACHE_KEY = "gip2PromptCache";
   const CUSTOM_KEY = "gip2CustomPrompts";
   const CATEGORIES_KEY = "gip2Categories";
@@ -8,7 +20,7 @@
   const HIDDEN_REMOTE_IDS_KEY = "gip2HiddenRemoteIds";
   const UPDATE_KEY = "gip2RemoteUpdate";
   const CACHE_TTL = 1000 * 60 * 60 * 6;
-  const MAX_ITEMS = 500;
+  const MAX_ITEMS = 1000;
 
   const fallbackPrompts = [
     {
@@ -226,6 +238,7 @@
       createdAt: parseTime(item.createdAt),
       updatedAt: parseTime(item.updatedAt),
       source: item.source === "custom" ? "custom" : "remote",
+      sourceName: String(item.sourceName || ""),
       tags: Array.isArray(item.tags) ? item.tags.map(String).filter(Boolean) : [],
       categoryId: String(item.categoryId || ""),
       remoteId: String(item.remoteId || ""),
@@ -286,13 +299,7 @@
         }
       }
 
-      const response = await fetch(`${RAW_URL}?t=${Date.now()}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const json = await response.json();
-      const items = json
-        .map((item, index) => normalizePrompt({ ...item, source: "remote" }, index))
-        .filter(Boolean)
-        .slice(0, MAX_ITEMS);
+      const items = await fetchRemotePrompts();
       await chromeSet({ [CACHE_KEY]: { savedAt: Date.now(), items } });
       remotePrompts = applyManagedRemoteState(items);
       setPrompts("已加载 GitHub 最新数据");
@@ -303,6 +310,76 @@
       setPrompts("加载远程数据失败，使用内置样例");
       showToast(`远程提示词库加载失败：${error.message}`);
     }
+  }
+
+  async function fetchRemotePrompts() {
+    const batches = await Promise.all(
+      REMOTE_SOURCES.map(async (source) => {
+        const response = await fetch(`${source.url}?t=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`${source.name} HTTP ${response.status}`);
+        const payload = await response.json();
+        return parseRemotePayload(payload, source);
+      }),
+    );
+    return batches.flat().slice(0, MAX_ITEMS);
+  }
+
+  function parseRemotePayload(payload, source) {
+    if (Array.isArray(payload)) {
+      return payload
+        .map((item, index) => normalizePrompt({ ...item, id: `${source.id}-${item.id || index}`, source: "remote", sourceName: source.name }, index))
+        .filter(Boolean);
+    }
+
+    const cases = Array.isArray(payload?.cases)
+      ? payload.cases.map((item, index) =>
+          normalizePrompt(
+            {
+              id: `${source.id}-case-${item.id || index}`,
+              title: item.title,
+              author: item.source || source.name,
+              lang: /[a-zA-Z]{20,}/.test(item.prompt || "") ? "mixed" : "zh",
+              text: item.prompt,
+              url: item.sourcePath ? `${source.homepage}/blob/main/${item.sourcePath.split("#")[0]}` : source.homepage,
+              likeCount: 0,
+              createdAt: payload.generatedAt,
+              source: "remote",
+              sourceName: source.name,
+              categoryId: item.categoryId || "",
+              tags: [item.volume, item.categoryId].filter(Boolean),
+              media: item.image
+                ? [{ url: `https://raw.githubusercontent.com/xiaobin1976/GPT_image/main/site/library/images/${item.image}` }]
+                : [],
+            },
+            index,
+          ),
+        )
+      : [];
+
+    const templates = Array.isArray(payload?.templates)
+      ? payload.templates.map((item, index) =>
+          normalizePrompt(
+            {
+              id: `${source.id}-template-${item.id || index}`,
+              title: item.title || item.name,
+              author: source.name,
+              lang: "zh",
+              text: item.prompt || item.template || item.markdown || item.content || item.rawMarkdown,
+              url: source.homepage,
+              likeCount: 0,
+              createdAt: payload.generatedAt,
+              source: "remote",
+              sourceName: `${source.name} Template`,
+              categoryId: item.categoryId || "",
+              tags: ["template", item.categoryId].filter(Boolean),
+              media: [],
+            },
+            index,
+          ),
+        )
+      : [];
+
+    return [...cases, ...templates].filter(Boolean);
   }
 
   async function loadCustomPrompts() {
@@ -455,6 +532,7 @@
     const title = item.title ? `<strong class="gip2-card-title">${escapeHtml(item.title)}</strong>` : "";
     const category = categories.find((entry) => entry.id === item.categoryId);
     const categoryBadge = category ? `<span class="gip2-source">${escapeHtml(category.name)}</span>` : "";
+    const remoteSource = item.sourceName ? `<span class="gip2-source">${escapeHtml(item.sourceName)}</span>` : "";
     const tags = item.tags.length
       ? `<div class="gip2-tags">${item.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>`
       : "";
@@ -470,6 +548,7 @@
         <div class="gip2-meta">
           <span class="gip2-pill">${escapeHtml(item.lang)}</span>
           <span class="gip2-source" data-source="${escapeAttr(item.source)}">${item.source === "custom" ? "我的" : "远程"}</span>
+          ${remoteSource}
           ${categoryBadge}
           <span class="gip2-author">@${escapeHtml(item.author)}</span>
           <span>${formatNumber(item.likeCount)} likes</span>

@@ -1,5 +1,17 @@
-const RAW_URL =
-  "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json";
+const REMOTE_SOURCES = [
+  {
+    id: "evolink",
+    name: "EvoLinkAI",
+    url: "https://raw.githubusercontent.com/EvoLinkAI/awesome-gpt-image-2-prompts/main/gpt_image2_prompts.json",
+    homepage: "https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts",
+  },
+  {
+    id: "xiaobin",
+    name: "GPT Image Wiki",
+    url: "https://raw.githubusercontent.com/xiaobin1976/GPT_image/main/site/library/catalog.json",
+    homepage: "https://github.com/xiaobin1976/GPT_image",
+  },
+];
 const CACHE_KEY = "gip2PromptCache";
 const CUSTOM_KEY = "gip2CustomPrompts";
 const CATEGORIES_KEY = "gip2Categories";
@@ -81,6 +93,18 @@ function normalizeCategories(items) {
     { id: "portrait", name: "人像", keywords: ["人像", "portrait", "人物", "model", "写真"] },
     { id: "poster", name: "海报", keywords: ["海报", "poster", "banner", "封面", "小红书"] },
     { id: "style", name: "风格", keywords: ["风格", "style", "film", "cinematic", "水墨", "插画"] },
+    { id: "ui", name: "UI与界面", keywords: ["界面", "截图", "dashboard", "直播", "app", "社媒", "交互"] },
+    { id: "infographic", name: "图表与信息可视化", keywords: ["信息图", "可视化", "图表", "图谱", "百科", "流程", "atlas", "infographic", "diagram"] },
+    { id: "ecommerce", name: "商品与电商", keywords: ["电商", "商品", "主图", "hero image", "卖点", "包装"] },
+    { id: "brand", name: "品牌与标志", keywords: ["品牌", "logo", "标志", "徽标", "识别", "identity"] },
+    { id: "architecture", name: "建筑与空间", keywords: ["建筑", "空间", "室内", "cabin", "interior", "render", "spatial"] },
+    { id: "photography", name: "摄影与写实", keywords: ["摄影", "写实", "人像", "portrait", "35mm", "film", "photo", "纪实"] },
+    { id: "illustration", name: "插画与艺术", keywords: ["插画", "艺术", "anime", "illustration", "绘制", "水彩", "厚涂"] },
+    { id: "character", name: "人物与角色", keywords: ["角色", "人设", "设定图", "character", "卡牌", "角色资料"] },
+    { id: "narrative", name: "场景与叙事", keywords: ["叙事", "分镜", "故事", "电影感", "场景图", "scene", "storyboard"] },
+    { id: "history", name: "历史与古风题材", keywords: ["古风", "历史", "文博", "博物馆", "诗词", "国风", "文物"] },
+    { id: "publishing", name: "文档与出版物", keywords: ["文档", "出版", "杂志", "书籍", "出版物", "报纸"] },
+    { id: "other", name: "其他应用场景", keywords: [] },
   ];
   const incoming = Array.isArray(items) ? items : [];
   const merged = [...base, ...incoming].filter(Boolean);
@@ -115,6 +139,7 @@ function normalizePrompt(item, index) {
     createdAt: parseTime(item.createdAt),
     updatedAt: parseTime(item.updatedAt),
     source: item.source || "custom",
+    sourceName: String(item.sourceName || ""),
     categoryId: String(item.categoryId || ""),
     tags: Array.isArray(item.tags) ? item.tags.map(String).filter(Boolean) : [],
     media: Array.isArray(item.media) ? item.media : [],
@@ -301,7 +326,7 @@ function handlePromptListClick(event) {
 function renderPromptCard(item) {
   const category = getCategoryName(item.categoryId) || "未分类";
   const title = item.title || item.text.slice(0, 42);
-  const sourceLabel = item.source === "custom" ? "我的" : item.remoteEdited ? "远程已改" : "远程";
+  const sourceLabel = item.source === "custom" ? "我的" : item.remoteEdited ? "远程已改" : item.sourceName || "远程";
   const tags = item.tags.length ? `<div class="tags">${item.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>` : "";
   return `<article class="prompt-card" draggable="true" data-id="${escapeAttr(item.id)}">
     <div class="meta">
@@ -550,9 +575,7 @@ async function clearRemoteDownloads() {
 
 async function checkRemoteUpdates(showDone = true) {
   try {
-    const response = await fetch(`${RAW_URL}?t=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const items = await response.json();
+    const items = await fetchRemotePrompts();
     const remote = normalizeList(items, "remote");
     const latest = makeSignature(items);
     const stored = await chromeGet(HASH_KEY);
@@ -572,6 +595,64 @@ async function checkRemoteUpdates(showDone = true) {
     renderRemoteStatus({ error: error.message, checkedAt: Date.now() });
     if (showDone) showToast(`检查失败：${error.message}`);
   }
+}
+
+async function fetchRemotePrompts() {
+  const batches = await Promise.all(
+    REMOTE_SOURCES.map(async (source) => {
+      const response = await fetch(`${source.url}?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`${source.name} HTTP ${response.status}`);
+      const payload = await response.json();
+      return parseRemotePayload(payload, source);
+    }),
+  );
+  return batches.flat();
+}
+
+function parseRemotePayload(payload, source) {
+  if (Array.isArray(payload)) {
+    return payload.map((item, index) => ({ ...item, id: `${source.id}-${item.id || index}`, sourceName: source.name }));
+  }
+
+  const cases = Array.isArray(payload?.cases)
+    ? payload.cases.map((item, index) => ({
+        id: `${source.id}-case-${item.id || index}`,
+        title: item.title,
+        author: item.source || source.name,
+        lang: /[a-zA-Z]{20,}/.test(item.prompt || "") ? "mixed" : "zh",
+        text: item.prompt,
+        url: item.sourcePath ? `${source.homepage}/blob/main/${item.sourcePath.split("#")[0]}` : source.homepage,
+        likeCount: 0,
+        createdAt: payload.generatedAt,
+        sourceName: source.name,
+        categoryId: item.categoryId || "",
+        tags: [item.volume, item.categoryId].filter(Boolean),
+        media: item.image
+          ? [{ url: `https://raw.githubusercontent.com/xiaobin1976/GPT_image/main/site/library/images/${item.image}` }]
+          : [],
+      }))
+    : [];
+
+  const templates = Array.isArray(payload?.templates)
+    ? payload.templates
+        .map((item, index) => ({
+          id: `${source.id}-template-${item.id || index}`,
+          title: item.title || item.name,
+          author: source.name,
+          lang: "zh",
+          text: item.prompt || item.template || item.markdown || item.content || item.rawMarkdown,
+          url: source.homepage,
+          likeCount: 0,
+          createdAt: payload.generatedAt,
+          sourceName: `${source.name} Template`,
+          categoryId: item.categoryId || "",
+          tags: ["template", item.categoryId].filter(Boolean),
+          media: [],
+        }))
+        .filter((item) => item.text)
+    : [];
+
+  return [...cases, ...templates].filter((item) => item.text);
 }
 
 function renderRemoteStatus(update) {
